@@ -9,8 +9,14 @@ using namespace std;
 
 struct Addressee
 {
-    int id = 0;
+    int addresseeId = 0;
     string name = "", surname = "", address = "", email = "", tel = "";
+};
+
+struct User
+{
+    int userId = 0;
+    string userName = "", password = "";
 };
 
 bool checkIfTelephoneNumberIsCorrect(string tel);
@@ -19,48 +25,88 @@ bool checkIfEmailIsCorrect(string email);
 
 bool checkIfNameOrSurnameIsCorrect(string nameOrSurname, string whatWillBeChecked);
 
-bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, int numberOfContacts, string name, string surname, string tel, string email, string address);
+bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, string name, string surname, string tel, string email, string address);
 
-void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee);
+void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee, int userId, string fileName);
 
-int addContact(vector<Addressee> &addressees, int numberOfContacts, int id);
+int addContact(vector<Addressee> &addressees, int numberOfContacts, int addresseeId, int userId);
 
-void loadDataFromFile(vector<Addressee> &addressees, int numberOfContacts);
+void loadDataFromFile(vector<Addressee> &addressees, int &numberOfContacts, int idOfLoggedUser);
 
-void displayDataOfAllAddressees(vector<Addressee> &addressees, int numberOfContacts);
+void displayDataOfAllAddressees(vector<Addressee> &addressees);
 
-bool checkIfThisNameExists(vector<Addressee> &addressees, string name, int numberOfContacts);
+bool checkIfThisNameExists(vector<Addressee> &addressees, string name);
 
-bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname, int numberOfContacts);
+bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname);
 
-void searchByName(vector<Addressee> &addressees, int numberOfContacts);
+void searchByName(vector<Addressee> &addressees);
 
-void searchBySurame(vector<Addressee> &addressees, int numberOfContacts);
+void searchBySurame(vector<Addressee> &addressees);
 
-bool checkIfThisIdExists(vector<Addressee> &addresssees, int numberOfContacts, int id);
+bool checkIfThisIdExists(vector<Addressee> &addresssees, int addresseeId);
 
-void reloadDataInFile(vector<Addressee> &addressees, int numberOfContacts);
+void reloadDataInFile(vector<Addressee> &addressees, int &numberOfContacts, int userId, int &chosenAddresseePosition, int chosenId, string mode);
 
-void displayAddresseeById(vector<Addressee> &addressee, int numberOfContacts, int id, int &chosenAddresseePosition);
+void displayAddresseeById(vector<Addressee> &addressee, int addresseeId, int &chosenAddresseePosition);
 
-void deleteAddressee(vector<Addressee> &addressees, int numberOfContacts);
+void deleteAddressee(vector<Addressee> &addressees, int &numberOfContacts, int userId);
 
-void editAddressee(vector<Addressee> &addressees, int numberOfContacts);
+void editAddressee(vector<Addressee> &addressees, int numberOfContacts, int userId);
 
-int getId();
+int getId(string fileName);
 
-int getNumberOfContacts();
+int getNumberOfContactsOrUsers(string fileName);
+
+void loadUsersFromFile(vector<User> &users, int numberOfUsers);
+
+int registerNewUser(vector<User> &users, int numberOfUsers, int userId);
+
+bool login(vector<User> &users, int numberOfUsers, int &idOfLoggedUser);
 
 int main()
 {
     vector<Addressee> addressees;
-    int id = getId(), numberOfContacts = getNumberOfContacts();
+    vector<User> users;
+    int addresseeId = getId("./data.txt"), numberOfContacts = getNumberOfContactsOrUsers("./data.txt");
+    int numberOfUsers = getNumberOfContactsOrUsers("./users.txt"), userId = getId("./users.txt");
     char choice;
+    bool isUserLoggedIn = false;
+    int idOfLoggedUser = 0;
 
-    loadDataFromFile(addressees, numberOfContacts);
+    loadUsersFromFile(users, numberOfUsers);
 
     while (1)
     {
+        while (!isUserLoggedIn)
+        {
+            system("cls");
+            cout << "PANEL UZYTKOWNIKA" << endl;
+            cout << "1. Logowanie" << endl;
+            cout << "2. Rejestracja" << endl;
+            cout << "3. Zamknij program" << endl;
+            cout << "Twoj wybor: ";
+
+            cin >> choice;
+
+            switch (choice)
+            {
+            case '1':
+                isUserLoggedIn = login(users, numberOfUsers, idOfLoggedUser);
+                break;
+            case '2':
+                userId++;
+                numberOfUsers = registerNewUser(users, numberOfUsers, userId);
+                break;
+            case '3':
+                exit(0);
+            default:
+                cout << "Nie ma takiej opcji w menu!" << endl;
+                Sleep(1500);
+                break;
+            }
+            loadDataFromFile(addressees, numberOfContacts, idOfLoggedUser);
+        }
+
         system("cls");
         cout << "KSIAZKA ADRESOWA" << endl;
         cout << "1. Dodaj adresata" << endl;
@@ -69,7 +115,7 @@ int main()
         cout << "4. Wyswietl wszystkich adresatow" << endl;
         cout << "5. Usun adresata" << endl;
         cout << "6. Edytuj adresata" << endl;
-        cout << "9. Zakoncz program" << endl;
+        cout << "7. Wyloguj sie" << endl;
         cout << "Twoj wybor: ";
 
         cin >> choice;
@@ -77,28 +123,29 @@ int main()
         switch (choice)
         {
         case '1':
-            id++;
-            numberOfContacts = addContact(addressees, numberOfContacts, id);
+            addresseeId++;
+            numberOfContacts = addContact(addressees, numberOfContacts, addresseeId, idOfLoggedUser);
             break;
         case '2':
-            searchByName(addressees, numberOfContacts);
+            searchByName(addressees);
             break;
         case '3':
-            searchBySurame(addressees, numberOfContacts);
+            searchBySurame(addressees);
             break;
         case '4':
-            displayDataOfAllAddressees(addressees, numberOfContacts);
+            displayDataOfAllAddressees(addressees);
             break;
         case '5':
-            deleteAddressee(addressees, numberOfContacts);
-            id = getId();
-            numberOfContacts = addressees.size();
+            deleteAddressee(addressees, numberOfContacts, idOfLoggedUser);
+            addresseeId = getId("./data.txt");
             break;
         case '6':
-            editAddressee(addressees, numberOfContacts);
+            editAddressee(addressees, numberOfContacts, idOfLoggedUser);
             break;
-        case '9':
-            exit(0);
+        case '7':
+            isUserLoggedIn = false;
+            addressees.clear();
+            break;
         default:
             cout << "Nie ma takiej opcji w menu!" << endl;
             Sleep(1500);
@@ -178,9 +225,9 @@ bool checkIfNameOrSurnameIsCorrect(string nameOrSurname, string whatWillBeChecke
     return result;
 }
 
-bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, int numberOfContacts, string name, string surname, string tel, string email, string address)
+bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, string name, string surname, string tel, string email, string address)
 {
-    for (int i = 0; i < numberOfContacts; i++)
+    for (int i = 0; i < addressees.size(); i++)
     {
         if (name == addressees[i].name && surname == addressees[i].surname && tel == addressees[i].tel && email == addressees[i].email && address == addressees[i].address)
         {
@@ -192,13 +239,29 @@ bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, int numberOfContact
     return false;
 }
 
-void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee)
+void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee, int userId, string fileName)
 {
     fstream file;
+    string line;
 
-    file.open("./data.txt", ios::out | ios::app);
+    file.open(fileName, ios::in);
+    // sprawdzam czy ostatnia linijka jest pusta
+    while (!file.eof())
+    {
+        getline(file, line);
+    }
 
-    file << addressees[indexOfAddressee].id << "|";
+    file.close();
+
+    file.open(fileName, ios::out | ios::app);
+
+    if (!line.empty())
+    {
+        file << endl;
+    }
+
+    file << addressees[indexOfAddressee].addresseeId << "|";
+    file << userId << "|";
     file << addressees[indexOfAddressee].name << "|";
     file << addressees[indexOfAddressee].surname << "|";
     file << addressees[indexOfAddressee].tel << "|";
@@ -208,7 +271,7 @@ void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee)
     file.close();
 }
 
-int addContact(vector<Addressee> &addressees, int numberOfContacts, int id)
+int addContact(vector<Addressee> &addressees, int numberOfContacts, int addresseeId, int userId)
 {
     string name, surname, address, email, tel;
     Addressee newAddresse;
@@ -241,11 +304,11 @@ int addContact(vector<Addressee> &addressees, int numberOfContacts, int id)
         cout << "Podaj adres: ";
         getline(cin, address);
 
-        if (!checkIfTheDataIsRepeated(addressees, numberOfContacts, name, surname, tel, email, address))
+        if (!checkIfTheDataIsRepeated(addressees, name, surname, tel, email, address))
             break;
     }
 
-    newAddresse.id = id;
+    newAddresse.addresseeId = addresseeId;
     newAddresse.name = name;
     newAddresse.surname = surname;
     newAddresse.tel = tel;
@@ -253,7 +316,7 @@ int addContact(vector<Addressee> &addressees, int numberOfContacts, int id)
     newAddresse.address = address;
     addressees.push_back(newAddresse);
 
-    writeDataInFile(addressees, numberOfContacts);
+    writeDataInFile(addressees, addressees.size() - 1, userId, "./data.txt");
 
     cout << "Dodano do kontaktow" << endl;
     Sleep(1500);
@@ -261,7 +324,7 @@ int addContact(vector<Addressee> &addressees, int numberOfContacts, int id)
     return ++numberOfContacts;
 }
 
-void loadDataFromFile(vector<Addressee> &addressees, int numberOfContacts)
+void loadDataFromFile(vector<Addressee> &addressees, int &numberOfContacts, int idOfLoggedUser)
 {
     fstream file;
     string line, idFromFile;
@@ -288,14 +351,17 @@ void loadDataFromFile(vector<Addressee> &addressees, int numberOfContacts)
             }
         }
 
-        idFromFile = dataOfAddressee[0];
-        loadedAddressee.id = atoi(idFromFile.c_str());
-        loadedAddressee.name = dataOfAddressee[1];
-        loadedAddressee.surname = dataOfAddressee[2];
-        loadedAddressee.tel = dataOfAddressee[3];
-        loadedAddressee.email = dataOfAddressee[4];
-        loadedAddressee.address = dataOfAddressee[5];
-        addressees.push_back(loadedAddressee);
+        if (atoi(dataOfAddressee[1].c_str()) == idOfLoggedUser)
+        {
+            idFromFile = dataOfAddressee[0];
+            loadedAddressee.addresseeId = atoi(idFromFile.c_str());
+            loadedAddressee.name = dataOfAddressee[2];
+            loadedAddressee.surname = dataOfAddressee[3];
+            loadedAddressee.tel = dataOfAddressee[4];
+            loadedAddressee.email = dataOfAddressee[5];
+            loadedAddressee.address = dataOfAddressee[6];
+            addressees.push_back(loadedAddressee);
+        }
         dataOfAddressee.clear();
     }
     file.close();
@@ -303,7 +369,7 @@ void loadDataFromFile(vector<Addressee> &addressees, int numberOfContacts)
 
 void displayDataOfSingleAddressee(vector<Addressee> &addressees, int indexOfAddressee)
 {
-    cout << "Id: " << addressees[indexOfAddressee].id << "|";
+    cout << "Id: " << addressees[indexOfAddressee].addresseeId << "|";
     cout << "Imie: " << addressees[indexOfAddressee].name << "|";
     cout << "Nazwisko: " << addressees[indexOfAddressee].surname << "|";
     cout << "Numer telefonu: " << addressees[indexOfAddressee].tel << "|";
@@ -312,9 +378,9 @@ void displayDataOfSingleAddressee(vector<Addressee> &addressees, int indexOfAddr
     cout << "----------------------------------------------------------------------------------------------------------------------------" << endl;
 }
 
-void displayDataOfAllAddressees(vector<Addressee> &addressees, int numberOfContacts)
+void displayDataOfAllAddressees(vector<Addressee> &addressees)
 {
-    if (numberOfContacts == 0)
+    if (addressees.size() == 0)
     {
         cout << "Ksiazka adresowa jest pusta" << endl;
         Sleep(1500);
@@ -330,9 +396,9 @@ void displayDataOfAllAddressees(vector<Addressee> &addressees, int numberOfConta
     }
 }
 
-bool checkIfThisNameExists(vector<Addressee> &addressees, string name, int numberOfContacts)
+bool checkIfThisNameExists(vector<Addressee> &addressees, string name)
 {
-    for (int i = 0; i < numberOfContacts; i++)
+    for (int i = 0; i < addressees.size(); i++)
     {
         if (name == addressees[i].name)
             return true;
@@ -341,9 +407,9 @@ bool checkIfThisNameExists(vector<Addressee> &addressees, string name, int numbe
     return false;
 }
 
-bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname, int numberOfContacts)
+bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname)
 {
-    for (int i = 0; i < numberOfContacts; i++)
+    for (int i = 0; i < addressees.size(); i++)
     {
         if (surname == addressees[i].surname)
             return true;
@@ -352,11 +418,11 @@ bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname, int
     return false;
 }
 
-void searchByName(vector<Addressee> &addressees, int numberOfContacts)
+void searchByName(vector<Addressee> &addressees)
 {
     string name;
 
-    if (numberOfContacts == 0)
+    if (addressees.size() == 0)
     {
         cout << "Ksiazka adresowa jest pusta" << endl;
         Sleep(1500);
@@ -370,7 +436,7 @@ void searchByName(vector<Addressee> &addressees, int numberOfContacts)
             getline(cin, name);
         } while (!checkIfNameOrSurnameIsCorrect(name, "name"));
 
-        if (!checkIfThisNameExists(addressees, name, numberOfContacts))
+        if (!checkIfThisNameExists(addressees, name))
         {
             cout << "Nie ma osob o takim imieniu w ksiazce adresowej" << endl;
             Sleep(1500);
@@ -378,7 +444,7 @@ void searchByName(vector<Addressee> &addressees, int numberOfContacts)
         else
         {
             cout << "----------------------------------------------------------------------------------------------------------------------------" << endl;
-            for (int i = 0; i < numberOfContacts; i++)
+            for (int i = 0; i < addressees.size(); i++)
             {
                 if (name == addressees[i].name)
                 {
@@ -390,11 +456,11 @@ void searchByName(vector<Addressee> &addressees, int numberOfContacts)
     }
 }
 
-void searchBySurame(vector<Addressee> &addressees, int numberOfContacts)
+void searchBySurame(vector<Addressee> &addressees)
 {
     string surname;
 
-    if (numberOfContacts == 0)
+    if (addressees.size() == 0)
     {
         cout << "Ksiazka adresowa jest pusta" << endl;
         Sleep(1500);
@@ -408,7 +474,7 @@ void searchBySurame(vector<Addressee> &addressees, int numberOfContacts)
             getline(cin, surname);
         } while (!checkIfNameOrSurnameIsCorrect(surname, "surname"));
 
-        if (!checkIfThisSurnameExists(addressees, surname, numberOfContacts))
+        if (!checkIfThisSurnameExists(addressees, surname))
         {
             cout << "Nie ma osob o takim nazwisku w ksiazce adresowej" << endl;
             Sleep(1500);
@@ -416,7 +482,7 @@ void searchBySurame(vector<Addressee> &addressees, int numberOfContacts)
         else
         {
             cout << "----------------------------------------------------------------------------------------------------------------------------" << endl;
-            for (int i = 0; i < numberOfContacts; i++)
+            for (int i = 0; i < addressees.size(); i++)
             {
                 if (surname == addressees[i].surname)
                 {
@@ -428,41 +494,94 @@ void searchBySurame(vector<Addressee> &addressees, int numberOfContacts)
     }
 }
 
-bool checkIfThisIdExists(vector<Addressee> &addresssees, int numberOfContacts, int id)
+bool checkIfThisIdExists(vector<Addressee> &addresssees, int addresseeId)
 {
-    for (int i = 0; i < numberOfContacts; i++)
+    for (int i = 0; i < addresssees.size(); i++)
     {
-        if (addresssees[i].id == id)
+        if (addresssees[i].addresseeId == addresseeId)
             return true;
     }
     return false;
 }
 
-void reloadDataInFile(vector<Addressee> &addressees, int numberOfContacts)
+void reloadDataInFile(vector<Addressee> &addressees, int &numberOfContacts, int userId, int &chosenAddresseePosition, int chosenId, string mode)
 {
-    fstream file;
+    fstream file, temporaryFile;
+    string line, partOfLine;
+    vector<string> dataOfAddressee;
+    bool doesThisIdExist = checkIfThisIdExists(addressees, chosenId);
+    int end = 0;
 
-    file.open("./data.txt", ios::out);
+    file.open("./data.txt", ios::in);
 
-    file.clear();
+    temporaryFile.open("./data_temp.txt", ios::out | ios::app);
 
-    for (int i = 0; i < numberOfContacts; i++)
+    if (mode == "edit")
     {
-        writeDataInFile(addressees, i);
+        end = numberOfContacts;
+    }
+    else
+    {
+        end = numberOfContacts + 1;
+    }
+
+    for (int i = 0; i < end; i++)
+    {
+        getline(file, line);
+        if (!line.empty())
+        {
+            for (int j = 0; j < line.length(); j++)
+            {
+                if (line[j] != '|')
+                {
+                    partOfLine += line[j];
+                }
+                else
+                {
+                    dataOfAddressee.push_back(partOfLine);
+                    partOfLine.clear();
+                }
+            }
+        }
+
+        if (doesThisIdExist)
+        {
+            if (chosenId == atoi(dataOfAddressee[0].c_str()))
+            {
+                writeDataInFile(addressees, chosenAddresseePosition, userId, "./data_temp.txt");
+            }
+            else
+            {
+                temporaryFile << line << endl;
+            }
+        }
+        else
+        {
+            if (chosenId != atoi(dataOfAddressee[0].c_str()))
+            {
+                temporaryFile << line << endl;
+            }
+        }
+
+        dataOfAddressee.clear();
     }
 
     file.close();
+    temporaryFile.close();
+
+    remove("./data.txt");
+    rename("./data_temp.txt", "./data.txt");
 
     addressees.clear();
 
-    loadDataFromFile(addressees, numberOfContacts);
+    loadDataFromFile(addressees, numberOfContacts, userId);
 }
 
-void displayAddresseeById(vector<Addressee> &addressees, int numberOfContacts, int id, int &chosenAddresseePosition)
+void displayAddresseeById(vector<Addressee> &addressees, int addresseeId, int &chosenAddresseePosition)
 {
-    for (int i = 0; i < numberOfContacts; i++)
+    for (int i = 0; i < addressees.size(); i++)
     {
-        if (id == addressees[i].id)
+        if (addresseeId == addressees[i].addresseeId)
         {
             chosenAddresseePosition = i;
             cout << "Oto dane adresata: " << endl;
@@ -472,11 +591,10 @@ void displayAddresseeById(vector<Addressee> &addressees, int numberOfContacts, i
     }
 }
 
-void deleteAddressee(vector<Addressee> &addressees, int numberOfContacts)
+void deleteAddressee(vector<Addressee> &addressees, int &numberOfContacts, int userId)
 {
     string name, surname;
-    int id;
-    bool idExists;
+    int addresseeId;
     char choice;
     vector<Addressee>::iterator it = addressees.begin();
     fstream file;
@@ -484,11 +602,9 @@ void deleteAddressee(vector<Addressee> &addressees, int numberOfContacts)
     int i = 0;
 
     cout << "Podaj id adresata, ktorego chcesz usunac z listy: ";
-    cin >> id;
+    cin >> addresseeId;
 
-    idExists = checkIfThisIdExists(addressees, numberOfContacts, id);
-
-    if (!idExists)
+    if (!checkIfThisIdExists(addressees, addresseeId))
     {
         cout << "Nie ma adresata o takim id" << endl;
         Sleep(1500);
@@ -497,7 +613,7 @@ void deleteAddressee(vector<Addressee> &addressees, int numberOfContacts)
 
     cout << endl;
 
-    displayAddresseeById(addressees, numberOfContacts, id, chosenAddresseePosition);
+    displayAddresseeById(addressees, addresseeId, chosenAddresseePosition);
     cout << endl;
 
     while (1)
@@ -516,9 +632,9 @@ void deleteAddressee(vector<Addressee> &addressees, int numberOfContacts)
             }
 
             addressees.erase(it);
-            numberOfContacts = addressees.size();
+            numberOfContacts--;
 
-            reloadDataInFile(addressees, numberOfContacts);
+            reloadDataInFile(addressees, numberOfContacts, userId, chosenAddresseePosition, addresseeId, "delete");
 
             cout << "Kontakt zostal usuniety" << endl;
             Sleep(1500);
@@ -537,25 +653,25 @@ void deleteAddressee(vector<Addressee> &addressees, int numberOfContacts)
     }
 }
 
-void editAddressee(vector<Addressee> &addressees, int numberOfContacts)
+void editAddressee(vector<Addressee> &addressees, int numberOfContacts, int userId)
 {
     char choice;
     string newName, newSurname, newEmail, newAddress, newTel;
-    int id;
+    int addresseeId;
     int chosenAddresseePosition;
 
     cout << endl;
     cout << "Podaj id adresata, ktorego chcesz edytowac: ";
-    cin >> id;
+    cin >> addresseeId;
 
-    if (!checkIfThisIdExists(addressees, numberOfContacts, id))
+    if (!checkIfThisIdExists(addressees, addresseeId))
     {
         cout << "Nie ma adresata o takim id" << endl;
         Sleep(1500);
         return;
     }
 
-    displayAddresseeById(addressees, numberOfContacts, id, chosenAddresseePosition);
+    displayAddresseeById(addressees, addresseeId, chosenAddresseePosition);
 
     cout << endl;
     cout << "MENU EDYCJI" << endl;
@@ -614,21 +730,21 @@ void editAddressee(vector<Addressee> &addressees, int numberOfContacts)
     default:
         cout << "Nie ma takiej opcji w menu!";
         Sleep(1500);
-        editAddressee(addressees, numberOfContacts);
+        editAddressee(addressees, numberOfContacts, userId);
         break;
     }
 
-    reloadDataInFile(addressees, numberOfContacts);
+    reloadDataInFile(addressees, numberOfContacts, userId, chosenAddresseePosition, addresseeId, "edit");
 }
 
-int getId()
+int getId(string fileName)
 {
     fstream file;
     string idFromFile;
     string line;
     int id = 0;
 
-    file.open("./data.txt", ios::in);
+    file.open(fileName, ios::in);
 
     if (file.good())
     {
@@ -646,13 +762,13 @@ int getId()
     return id;
 }
 
-int getNumberOfContacts()
+int getNumberOfContactsOrUsers(string fileName)
 {
     fstream file;
     string line;
-    int numberOfContacts = 0;
+    int numberOfContactsOrUsers = 0;
 
-    file.open("./data.txt", ios::in);
+    file.open(fileName, ios::in);
 
     if (file.good())
     {
@@ -660,11 +776,104 @@ int getNumberOfContacts()
         {
             getline(file, line);
             if (!line.empty())
-                numberOfContacts++;
+                numberOfContactsOrUsers++;
         }
     }
 
     file.close();
 
-    return numberOfContacts;
+    return numberOfContactsOrUsers;
+}
+
+void loadUsersFromFile(vector<User> &users, int numberOfUsers)
+{
+    fstream file;
+    string line;
+    string idFromFile, userName, password, partOfLine;
+    User loadedUser;
+    vector<string> dataOfUser;
+
+    file.open("./users.txt", ios::in);
+
+    for (int i = 0; i < numberOfUsers; i++)
+    {
+        getline(file, line);
+        for (int j = 0; j < line.length(); j++)
+        {
+            if (line[j] != '|')
+            {
+                partOfLine += line[j];
+            }
+            else
+            {
+                dataOfUser.push_back(partOfLine);
+                partOfLine.clear();
+            }
+        }
+        idFromFile = dataOfUser[0];
+        loadedUser.userId = atoi(idFromFile.c_str());
+        loadedUser.userName = dataOfUser[1];
+        loadedUser.password = dataOfUser[2];
+        users.push_back(loadedUser);
+        dataOfUser.clear();
+    }
+    file.close();
+}
+
+int registerNewUser(vector<User> &users, int numberOfUsers, int userId)
+{
+    User newUser;
+    string userName, password;
+    fstream file;
+
+    cout << "Podaj nazwe uzytkownika: ";
+    cin >> userName;
+
+    cout << "Podaj haslo: ";
+    cin >> password;
+
+    newUser.userId = userId;
+    newUser.userName = userName;
+    newUser.password = password;
+
+    users.push_back(newUser);
+
+    file.open("./users.txt", ios::out | ios::app);
+
+    file << users[numberOfUsers].userId << "|";
+    file << users[numberOfUsers].userName << "|";
+    file << users[numberOfUsers].password << "|" << endl;
+
+    file.close();
+
+    cout << "Rejestracja przebiegla pomyslnie" << endl;
+    Sleep(1500);
+
+    return ++numberOfUsers;
+}
+
+bool login(vector<User> &users, int numberOfUsers, int &idOfLoggedUser)
+{
+    string userName, password;
+
+    cout << "Podaj nazwe uzytkownika: ";
+    cin >> userName;
+
+    cout << "Podaj haslo: ";
+    cin >> password;
+
+    for (int i = 0; i < numberOfUsers; i++)
+    {
+        if (userName == users[i].userName && password == users[i].password)
+        {
+            cout << "Logowanie zakonczone sukcesem" << endl;
+            idOfLoggedUser = users[i].userId;
+            Sleep(1500);
+            return true;
+        }
+    }
+
+    cout << "Nieprawidlowa nazwa uzytkownika lub haslo" << endl;
+    Sleep(1500);
+    return false;
 }

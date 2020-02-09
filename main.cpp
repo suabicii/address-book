@@ -19,13 +19,13 @@ struct User
     string userName = "", password = "";
 };
 
-bool checkIfTelephoneNumberIsCorrect(string tel);
+bool isTelephoneNumerCorrect(string tel);
 
-bool checkIfEmailIsCorrect(string email);
+bool isEmailCorrect(string email);
 
-bool checkIfNameOrSurnameIsCorrect(string nameOrSurname, string whatWillBeChecked);
+bool isNameOrSurnameCorrect(string nameOrSurname, string whatWillBeChecked);
 
-bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, string name, string surname, string tel, string email, string address);
+bool isTheDataRepeated(vector<Addressee> &addressees, string name, string surname, string tel, string email, string address);
 
 void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee, int userId, string fileName);
 
@@ -35,9 +35,9 @@ void loadDataFromFile(vector<Addressee> &addressees, int &numberOfContacts, int 
 
 void displayDataOfAllAddressees(vector<Addressee> &addressees);
 
-bool checkIfThisNameExists(vector<Addressee> &addressees, string name);
+bool doesTheNameExist(vector<Addressee> &addressees, string name);
 
-bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname);
+bool doesTheSurnameExist(vector<Addressee> &addressees, string surname);
 
 void searchByName(vector<Addressee> &addressees);
 
@@ -57,11 +57,11 @@ int getId(string fileName);
 
 int getNumberOfContactsOrUsers(string fileName);
 
-void loadUsersFromFile(vector<User> &users, int numberOfUsers);
+void loadUsersFromFile(vector<User> &user, int numberOfUsers);
 
-int registerNewUser(vector<User> &users, int numberOfUsers, int userId);
+void registerNewUser(vector<User> &users, int userId);
 
-bool login(vector<User> &users, int numberOfUsers, int &idOfLoggedUser);
+bool login(vector<User> &users, int &idOfLoggedUser);
 
 int main()
 {
@@ -91,11 +91,11 @@ int main()
             switch (choice)
             {
             case '1':
-                isUserLoggedIn = login(users, numberOfUsers, idOfLoggedUser);
+                isUserLoggedIn = login(users, idOfLoggedUser);
                 break;
             case '2':
                 userId++;
-                numberOfUsers = registerNewUser(users, numberOfUsers, userId);
+                registerNewUser(users, userId);
                 break;
             case '3':
                 exit(0);
@@ -145,6 +145,8 @@ int main()
         case '7':
             isUserLoggedIn = false;
             addressees.clear();
+            cout << "Wylogowano" << endl;
+            Sleep(1500);
             break;
         default:
             cout << "Nie ma takiej opcji w menu!" << endl;
@@ -156,7 +158,7 @@ int main()
     return 0;
 }
 
-bool checkIfTelephoneNumberIsCorrect(string tel)
+bool isTelephoneNumerCorrect(string tel)
 {
     int length = tel.length();
 
@@ -174,7 +176,7 @@ bool checkIfTelephoneNumberIsCorrect(string tel)
     return true;
 }
 
-bool checkIfEmailIsCorrect(string email)
+bool isEmailCorrect(string email)
 {
     int length = email.length();
 
@@ -191,7 +193,7 @@ bool checkIfEmailIsCorrect(string email)
     return false;
 }
 
-bool checkIfNameOrSurnameIsCorrect(string nameOrSurname, string whatWillBeChecked)
+bool isNameOrSurnameCorrect(string nameOrSurname, string whatWillBeChecked)
 {
     int length = nameOrSurname.length();
     bool result = true;
@@ -225,7 +227,7 @@ bool checkIfNameOrSurnameIsCorrect(string nameOrSurname, string whatWillBeChecke
     return result;
 }
 
-bool checkIfTheDataIsRepeated(vector<Addressee> &addressees, string name, string surname, string tel, string email, string address)
+bool isTheDataRepeated(vector<Addressee> &addressees, string name, string surname, string tel, string email, string address)
 {
     for (int i = 0; i < addressees.size(); i++)
     {
@@ -246,9 +248,10 @@ void writeDataInFile(vector<Addressee> &addressees, int indexOfAddressee, int us
 
     file.open(fileName, ios::in);
     // sprawdzam czy ostatnia linijka jest pusta
-    while (!file.eof())
+    if (file.good())
     {
-        getline(file, line);
+        while (!file.eof())
+            getline(file, line);
     }
 
     file.close();
@@ -283,28 +286,28 @@ int addContact(vector<Addressee> &addressees, int numberOfContacts, int addresse
             cout << "Podaj imie: ";
             cin.sync();
             getline(cin, name);
-        } while (!checkIfNameOrSurnameIsCorrect(name, "name"));
+        } while (!isNameOrSurnameCorrect(name, "name"));
         do
         {
             cout << "Podaj nazwisko: ";
             cin.sync();
             getline(cin, surname);
-        } while (!checkIfNameOrSurnameIsCorrect(surname, "surname"));
+        } while (!isNameOrSurnameCorrect(surname, "surname"));
         do
         {
             cout << "Podaj numer telefonu: ";
             cin >> tel;
-        } while (!checkIfTelephoneNumberIsCorrect(tel));
+        } while (!isTelephoneNumerCorrect(tel));
         do
         {
             cout << "Podaj adres e-mail: ";
             cin >> email;
-        } while (!checkIfEmailIsCorrect(email));
+        } while (!isEmailCorrect(email));
         cin.sync();
         cout << "Podaj adres: ";
         getline(cin, address);
 
-        if (!checkIfTheDataIsRepeated(addressees, name, surname, tel, email, address))
+        if (!isTheDataRepeated(addressees, name, surname, tel, email, address))
             break;
     }
 
@@ -396,7 +399,7 @@ void displayDataOfAllAddressees(vector<Addressee> &addressees)
     }
 }
 
-bool checkIfThisNameExists(vector<Addressee> &addressees, string name)
+bool doesTheNameExist(vector<Addressee> &addressees, string name)
 {
     for (int i = 0; i < addressees.size(); i++)
     {
@@ -407,7 +410,7 @@ bool checkIfThisNameExists(vector<Addressee> &addressees, string name)
     return false;
 }
 
-bool checkIfThisSurnameExists(vector<Addressee> &addressees, string surname)
+bool doesTheSurnameExist(vector<Addressee> &addressees, string surname)
 {
     for (int i = 0; i < addressees.size(); i++)
     {
@@ -434,9 +437,9 @@ void searchByName(vector<Addressee> &addressees)
             cout << "Podaj imie: ";
             cin.sync();
             getline(cin, name);
-        } while (!checkIfNameOrSurnameIsCorrect(name, "name"));
+        } while (!isNameOrSurnameCorrect(name, "name"));
 
-        if (!checkIfThisNameExists(addressees, name))
+        if (!doesTheNameExist(addressees, name))
         {
             cout << "Nie ma osob o takim imieniu w ksiazce adresowej" << endl;
             Sleep(1500);
@@ -472,9 +475,9 @@ void searchBySurame(vector<Addressee> &addressees)
             cout << "Podaj nazwisko: ";
             cin.sync();
             getline(cin, surname);
-        } while (!checkIfNameOrSurnameIsCorrect(surname, "surname"));
+        } while (!isNameOrSurnameCorrect(surname, "surname"));
 
-        if (!checkIfThisSurnameExists(addressees, surname))
+        if (!doesTheSurnameExist(addressees, surname))
         {
             cout << "Nie ma osob o takim nazwisku w ksiazce adresowej" << endl;
             Sleep(1500);
@@ -820,7 +823,7 @@ void loadUsersFromFile(vector<User> &users, int numberOfUsers)
     file.close();
 }
 
-int registerNewUser(vector<User> &users, int numberOfUsers, int userId)
+void registerNewUser(vector<User> &users, int userId)
 {
     User newUser;
     string userName, password;
@@ -840,19 +843,17 @@ int registerNewUser(vector<User> &users, int numberOfUsers, int userId)
 
     file.open("./users.txt", ios::out | ios::app);
 
-    file << users[numberOfUsers].userId << "|";
-    file << users[numberOfUsers].userName << "|";
-    file << users[numberOfUsers].password << "|" << endl;
+    file << users[users.size() - 1].userId << "|";
+    file << users[users.size() - 1].userName << "|";
+    file << users[users.size() - 1].password << "|" << endl;
 
     file.close();
 
     cout << "Rejestracja przebiegla pomyslnie" << endl;
     Sleep(1500);
-
-    return ++numberOfUsers;
 }
 
-bool login(vector<User> &users, int numberOfUsers, int &idOfLoggedUser)
+bool login(vector<User> &users, int &idOfLoggedUser)
 {
     string userName, password;
 
@@ -862,7 +863,7 @@ bool login(vector<User> &users, int numberOfUsers, int &idOfLoggedUser)
     cout << "Podaj haslo: ";
     cin >> password;
 
-    for (int i = 0; i < numberOfUsers; i++)
+    for (int i = 0; i < users.size(); i++)
     {
         if (userName == users[i].userName && password == users[i].password)
         {

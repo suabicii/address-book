@@ -13,10 +13,17 @@ struct Addressee
     string name = "", surname = "", address = "", email = "", tel = "";
 };
 
-struct User
+class User
 {
-    int userId = 0;
-    string userName = "", password = "";
+public:
+    void registerNewUser(vector<User> &users, int idFromFile);
+    void loadUsersFromFile(vector<User> &users, int numberOfUsers);
+    bool login(vector<User> &users, int &idOfLoggedUser);
+    void changePassword(vector<User> &users, int &idOfLoggedUser);
+
+private:
+    int id;
+    string userName, password;
 };
 
 bool isTelephoneNumerCorrect(string tel);
@@ -57,23 +64,18 @@ int getId(string fileName);
 
 int getNumberOfContactsOrUsers(string fileName);
 
-void loadUsersFromFile(vector<User> &user, int numberOfUsers);
-
-void registerNewUser(vector<User> &users, int userId);
-
-bool login(vector<User> &users, int &idOfLoggedUser);
-
 int main()
 {
     vector<Addressee> addressees;
     vector<User> users;
+    User user;
     int addresseeId = getId("./data.txt"), numberOfContacts = getNumberOfContactsOrUsers("./data.txt");
     int numberOfUsers = getNumberOfContactsOrUsers("./users.txt"), userId = getId("./users.txt");
     char choice;
     bool isUserLoggedIn = false;
     int idOfLoggedUser = 0;
 
-    loadUsersFromFile(users, numberOfUsers);
+    user.loadUsersFromFile(users, numberOfUsers);
 
     while (1)
     {
@@ -91,11 +93,11 @@ int main()
             switch (choice)
             {
             case '1':
-                isUserLoggedIn = login(users, idOfLoggedUser);
+                isUserLoggedIn = user.login(users, idOfLoggedUser);
                 break;
             case '2':
                 userId++;
-                registerNewUser(users, userId);
+                user.registerNewUser(users, userId);
                 break;
             case '3':
                 exit(0);
@@ -115,7 +117,8 @@ int main()
         cout << "4. Wyswietl wszystkich adresatow" << endl;
         cout << "5. Usun adresata" << endl;
         cout << "6. Edytuj adresata" << endl;
-        cout << "7. Wyloguj sie" << endl;
+        cout << "7. Zmien haslo" << endl;
+        cout << "8. Wyloguj sie" << endl;
         cout << "Twoj wybor: ";
 
         cin >> choice;
@@ -143,6 +146,9 @@ int main()
             editAddressee(addressees, numberOfContacts, idOfLoggedUser);
             break;
         case '7':
+            user.changePassword(users, idOfLoggedUser);
+            break;
+        case '8':
             isUserLoggedIn = false;
             addressees.clear();
             cout << "Wylogowano" << endl;
@@ -636,7 +642,7 @@ void deleteAddressee(vector<Addressee> &addressees, int &numberOfContacts, int u
 
             addressees.erase(it);
             numberOfContacts--;
-
+            // Jak to nie uzywam zmiennej numberOfContacts? Spojrz na ponizsza funkcje:
             reloadDataInFile(addressees, numberOfContacts, userId, chosenAddresseePosition, addresseeId, "delete");
 
             cout << "Kontakt zostal usuniety" << endl;
@@ -788,7 +794,7 @@ int getNumberOfContactsOrUsers(string fileName)
     return numberOfContactsOrUsers;
 }
 
-void loadUsersFromFile(vector<User> &users, int numberOfUsers)
+void User::loadUsersFromFile(vector<User> &users, int numberOfUsers)
 {
     fstream file;
     string line;
@@ -814,7 +820,7 @@ void loadUsersFromFile(vector<User> &users, int numberOfUsers)
             }
         }
         idFromFile = dataOfUser[0];
-        loadedUser.userId = atoi(idFromFile.c_str());
+        loadedUser.id = atoi(idFromFile.c_str());
         loadedUser.userName = dataOfUser[1];
         loadedUser.password = dataOfUser[2];
         users.push_back(loadedUser);
@@ -823,27 +829,24 @@ void loadUsersFromFile(vector<User> &users, int numberOfUsers)
     file.close();
 }
 
-void registerNewUser(vector<User> &users, int userId)
+void User::registerNewUser(vector<User> &users, int idFromFile)
 {
     User newUser;
-    string userName, password;
     fstream file;
 
     cout << "Podaj nazwe uzytkownika: ";
-    cin >> userName;
+    cin >> newUser.userName;
 
     cout << "Podaj haslo: ";
-    cin >> password;
+    cin >> newUser.password;
 
-    newUser.userId = userId;
-    newUser.userName = userName;
-    newUser.password = password;
+    newUser.id = idFromFile;
 
     users.push_back(newUser);
 
     file.open("./users.txt", ios::out | ios::app);
 
-    file << users[users.size() - 1].userId << "|";
+    file << users[users.size() - 1].id << "|";
     file << users[users.size() - 1].userName << "|";
     file << users[users.size() - 1].password << "|" << endl;
 
@@ -853,7 +856,7 @@ void registerNewUser(vector<User> &users, int userId)
     Sleep(1500);
 }
 
-bool login(vector<User> &users, int &idOfLoggedUser)
+bool User::login(vector<User> &users, int &idOfLoggedUser)
 {
     string userName, password;
 
@@ -868,7 +871,7 @@ bool login(vector<User> &users, int &idOfLoggedUser)
         if (userName == users[i].userName && password == users[i].password)
         {
             cout << "Logowanie zakonczone sukcesem" << endl;
-            idOfLoggedUser = users[i].userId;
+            idOfLoggedUser = users[i].id;
             Sleep(1500);
             return true;
         }
@@ -877,4 +880,44 @@ bool login(vector<User> &users, int &idOfLoggedUser)
     cout << "Nieprawidlowa nazwa uzytkownika lub haslo" << endl;
     Sleep(1500);
     return false;
+}
+
+void User::changePassword(vector<User> &users, int &idOfLoggedUser)
+{
+    string oldPassword, newPassword;
+    fstream file;
+    vector<User>::iterator it = users.begin();
+
+    cout << "Podaj aktualne haslo: ";
+    cin >> oldPassword;
+
+    for (int i = 0; i < users.size(); i++)
+    {
+        if (oldPassword == users[i].password && idOfLoggedUser == users[i].id)
+        {
+            cout << "Podaj nowe haslo: ";
+            cin >> newPassword;
+            users[i].password = newPassword;
+
+            file.open("./users.txt", ios::out);
+
+            while (it != users.end())
+            {
+                file << it->id << "|";
+                file << it->userName << "|";
+                file << it->password << "|" << endl;
+                it++;
+            }
+
+            file.close();
+
+            cout << "Haslo zostalo zmienione" << endl;
+            Sleep(1500);
+
+            return;
+        }
+    }
+
+    cout << "Bledne haslo!" << endl;
+    Sleep(1500);
 }
